@@ -512,10 +512,10 @@ local function createLabelRow(text, layoutOrder, parentFrame)
 	return row, label
 end
 
-local function createDropdownRow(name, description, layoutOrder, options, onSelected, parentFrame)
+local function createDropdownRow(name, description, layoutOrder, options, defaultOption, onSelected, parentFrame)
 	local row = createRowBase(name, description, layoutOrder, parentFrame)
 	local isOpen = false
-	local selectedOption = options and options[1]
+	local selectedOption = defaultOption or (options and options[1])
 
 	local bar = Instance.new("Frame")
 	bar.Name = "Bar"
@@ -715,9 +715,11 @@ local function createDropdownRow(name, description, layoutOrder, options, onSele
 		end
 	end
 
-	frame:GetPropertyChangedSignal("Position"):Connect(function()
-		if isOpen then positionPanel() end
-	end)
+	if currentFrame then
+		currentFrame:GetPropertyChangedSignal("Position"):Connect(function()
+			if isOpen then positionPanel() end
+		end)
+	end
 
 	return row, bar
 end
@@ -989,9 +991,11 @@ local function createMultiDropdownRow(name, description, layoutOrder, options, d
 		end
 	end
 
-	frame:GetPropertyChangedSignal("Position"):Connect(function()
-		if isOpen then positionPanel() end
-	end)
+	if currentFrame then
+		currentFrame:GetPropertyChangedSignal("Position"):Connect(function()
+			if isOpen then positionPanel() end
+		end)
+	end
 
 	return row, bar
 end
@@ -1532,9 +1536,11 @@ local function createColorPickerRow(name, description, layoutOrder, defaultColor
 		end
 	end)
 
-	frame:GetPropertyChangedSignal("Position"):Connect(function()
-		if isOpen then positionPanel() end
-	end)
+	if currentFrame then
+		currentFrame:GetPropertyChangedSignal("Position"):Connect(function()
+			if isOpen then positionPanel() end
+		end)
+	end
 
 	return row, swatch
 end
@@ -1662,6 +1668,8 @@ local function createSection(title, icon, layoutOrder, startOpen, parentFrame)
 	return section, body
 end
 
+local currentFrame = nil
+
 Stellar.CreateWindow = function(config)
 	local iconAsset = config.Icon or ICON_ASSET_ID
 	local frameSize = config.Size or FRAME_SIZE
@@ -1725,6 +1733,8 @@ Stellar.CreateWindow = function(config)
 	frame.ClipsDescendants = true
 	frame.ZIndex = 2
 	frame.Parent = screenGui
+
+	currentFrame = frame
 
 	local frameCorner = Instance.new("UICorner")
 	frameCorner.CornerRadius = FRAME_CORNER_RADIUS
@@ -2111,7 +2121,7 @@ Stellar.CreateWindow = function(config)
 		function tab:CreateDropdown(dropdownConfig)
 			local layoutOrder = self.LayoutOrder + 1
 			self.LayoutOrder = layoutOrder
-			createDropdownRow(dropdownConfig.Name, dropdownConfig.Description or "", layoutOrder, dropdownConfig.Options, dropdownConfig.Callback, page)
+			createDropdownRow(dropdownConfig.Name, dropdownConfig.Description or "", layoutOrder, dropdownConfig.Options, dropdownConfig.Default, dropdownConfig.Callback, page)
 		end
 
 		function tab:CreateMultiDropdown(multiConfig)
